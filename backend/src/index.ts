@@ -26,9 +26,13 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
+const allowedOrigins = process.env.FRONTEND_URL ?
+  process.env.FRONTEND_URL.split(',') :
+  ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"];
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
   }
 });
@@ -37,7 +41,7 @@ const PORT = process.env.PORT || 3001;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bysimmed_erp';
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || ["http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
+  origin: allowedOrigins,
   credentials: true
 }));
 
@@ -93,15 +97,21 @@ const startServer = async () => {
   try {
     await connectDatabase(MONGODB_URI);
 
-    server.listen(PORT, () => {
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '0.0.0.0';
+    server.listen(Number(PORT), host, () => {
+      const baseUrl = process.env.NODE_ENV === 'production'
+        ? `https://your-app-name.railway.app`
+        : `http://192.168.4.35:${PORT}`;
+
       console.log(`
 🚀 bySIMMED ERP Backend Server Started
 🌍 Environment: ${process.env.NODE_ENV || 'development'}
 📍 Port: ${PORT}
 💾 Database: Connected to MongoDB
-🔗 API Base: http://localhost:${PORT}/api
-📊 Health Check: http://localhost:${PORT}/health
+🔗 API Base: ${baseUrl}/api
+📊 Health Check: ${baseUrl}/health
 ⚡ Real-time: Socket.IO enabled
+🌐 Network: ${process.env.NODE_ENV === 'production' ? 'Cloud deployment' : 'Local network access'}
       `);
     });
   } catch (error) {
