@@ -37,7 +37,7 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || '3001';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bysimmed_erp';
 
 app.use(cors({
@@ -152,10 +152,5 @@ process.on('SIGINT', () => {
     process.exit(0);
   });
 });
-
-// Keep alive para evitar timeouts
-setInterval(() => {
-  console.log('Keep alive - Server is running at:', new Date().toISOString());
-}, 300000); // Cada 5 minutos
 
 export { io };
