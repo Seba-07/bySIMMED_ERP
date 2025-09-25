@@ -2,20 +2,25 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Install dependencies first
 COPY package*.json ./
+RUN npm ci --only=production --no-cache
 
-# Install dependencies
-RUN npm install --no-cache --production=false
+# Install dev dependencies for build
+RUN npm ci --no-cache
 
-# Copy source code
-COPY . .
+# Copy tsconfig and source code
+COPY tsconfig.json ./
+COPY src ./src
 
 # Build the application
-RUN npm run build
+RUN npx tsc
+
+# Copy other necessary files
+COPY . .
 
 # Expose port
 EXPOSE 3001
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]
