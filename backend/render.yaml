@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: bysimmed-erp-backend
+    runtime: node
+    repo: https://github.com/Seba-07/bySIMMED_ERP
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npx ts-node src/index.ts
+    envVars:
+      - key: NODE_ENV
+        value: production
