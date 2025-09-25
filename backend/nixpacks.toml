@@ -1,8 +1,9 @@
 [phases.build]
-cmds = ["npm ci", "npm run build"]
+cmds = ["npm ci --no-cache --prefer-offline", "npm run build"]
 
 [phases.start]
 cmd = "npm start"
 
 [variables]
 NODE_ENV = "production"
+NPM_CONFIG_CACHE = "/tmp/npm-cache"
