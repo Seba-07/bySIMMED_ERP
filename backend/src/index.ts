@@ -60,12 +60,24 @@ const manufacturingOrderRepository = new MongoManufacturingOrderRepository();
 const manufacturingOrderUseCases = new ManufacturingOrderUseCases(manufacturingOrderRepository, inventoryRepository, productionCardUseCases);
 const manufacturingOrderController = new ManufacturingOrderController(manufacturingOrderUseCases);
 
+// Health check endpoint - IMPORTANTE para Railway
 app.get('/health', (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: 'bySIMMED ERP API is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime()
+  });
+});
+
+// Root endpoint para Railway
+app.get('/', (req, res) => {
+  res.status(200).json({
+    name: 'bySIMMED ERP API',
+    version: '1.0.0',
+    status: 'active',
+    health: '/health'
   });
 });
 
@@ -97,8 +109,10 @@ const startServer = async () => {
   try {
     await connectDatabase(MONGODB_URI);
 
-    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '0.0.0.0';
-    server.listen(Number(PORT), host, () => {
+    const host = '0.0.0.0';
+    const port = parseInt(PORT as string, 10);
+
+    server.listen(port, host, () => {
       const baseUrl = process.env.NODE_ENV === 'production'
         ? `https://your-app-name.railway.app`
         : `http://192.168.4.35:${PORT}`;
@@ -106,7 +120,7 @@ const startServer = async () => {
       console.log(`
 🚀 bySIMMED ERP Backend Server Started
 🌍 Environment: ${process.env.NODE_ENV || 'development'}
-📍 Port: ${PORT}
+📍 Port: ${port}
 💾 Database: Connected to MongoDB
 🔗 API Base: ${baseUrl}/api
 📊 Health Check: ${baseUrl}/health
@@ -121,5 +135,27 @@ const startServer = async () => {
 };
 
 startServer();
+
+// Manejo de señales para Railway
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received: closing HTTP server');
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+});
+
+// Keep alive para evitar timeouts
+setInterval(() => {
+  console.log('Keep alive - Server is running at:', new Date().toISOString());
+}, 300000); // Cada 5 minutos
 
 export { io };
